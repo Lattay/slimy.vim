@@ -171,6 +171,7 @@ function! s:RenewConfig() abort
         else
             let l:new_id = s:Split(b:slimy_config['cmd'], {})
         endif
+        let b:slimy_config['bufnr'] = l:new_id
         return 1
     else
         return s:Config()
