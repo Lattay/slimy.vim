@@ -4,14 +4,14 @@
 
 if !exists('g:slimy_preserve_curpos')
     let g:slimy_preserve_curpos = 1
-end
+endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Neovim terminal
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 if has('nvim')
     function! s:Split(cmd, config) abort
-        let winid = win_getid()
+        let l:winid = win_getid()
         if has_key(a:config, 'vertical') && a:config['vertical']
             exec('vsplit new')
         else
@@ -19,31 +19,36 @@ if has('nvim')
         endif
 
         call termopen(a:cmd)
-        let id = bufnr('%')
-        call win_gotoid(winid)
+        let l:id = bufnr('%')
+        call win_gotoid(l:winid)
 
-        return id
+        return l:id
     endfunction
 
-    function! s:Send(config, text)
-        let bufnr = str2nr(get(a:config,'bufnr',''))
-        let var = getbufinfo(bufnr)[0]['variables']
-        if !has_key(var, 'terminal_job_id')
-            echoerr 'Invalid terminal. Use :SlimyConfig to select a terminal'
+    function! s:Send(config, text) abort
+        let l:bufnr = str2nr(get(a:config,'bufnr',''))
+        try
+            let l:var = getbufinfo(bufnr)[0]['variables']
+        catch
+            echo 'Invalid terminal. Use :SlimyConfig to select a terminal'
+            return
+        endtry
+        if !has_key(l:var, 'terminal_job_id')
+            echo 'Invalid terminal. Use :SlimyConfig to select a terminal'
             return
         endif
-        let jobid = var['terminal_job_id']
-        call chansend(str2nr(jobid), split(a:text, '\n', 1))
+        let l:jobid = l:var['terminal_job_id']
+        call chansend(str2nr(l:jobid), split(a:text, '\n', 1))
     endfunction
 
     function! s:TermBufList() abort
-        let term_buf = []
+        let l:term_buf = []
         for buf in getbufinfo()
             if has_key(buf['variables'], 'terminal_job_id')
-                call add(term_buf, buf['bufnr'])
+                call add(l:term_buf, l:buf['bufnr'])
             endif
         endfor
-        return term_buf
+        return l:term_buf
     endfunction
 
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -54,24 +59,24 @@ else
         echoerr 'vimterminal support requires vim built with :terminal support'
     else
         function! s:Split(cmd, config) abort
-            let winid = win_getid()
-            let id = term_start(a:cmd, a:config)
-            call win_gotoid(winid)
-            return id
+            let l:winid = win_getid()
+            let l:id = term_start(a:cmd, a:config)
+            call win_gotoid(l:winid)
+            return l:id
         endfunction
 
-        function! s:Send(config, text)
-            let bufnr = str2nr(get(a:config,'bufnr',''))
-            if len(term_getstatus(bufnr))==0
-                echoerr 'Invalid terminal. Use :SlimyConfig to select a terminal'
+        function! s:Send(config, text) abort
+            let l:bufnr = str2nr(get(a:config,'bufnr',''))
+            if len(term_getstatus(l:bufnr))==0
+                echo 'Invalid terminal. Use :SlimyConfig to select a terminal'
                 return
             endif
             " Ideally we ought to be able to use a single term_sendkeys call however as
             " of vim 8.0.1203 doing so can cause terminal display issues for longer
             " selections of text.
             for l in split(a:text,'\n\zs')
-                call term_sendkeys(bufnr,substitute(l,'\n','\r',''))
-                call term_wait(bufnr)
+                call term_sendkeys(l:bufnr,substitute(l,'\n','\r',''))
+                call term_wait(l:bufnr)
             endfor
         endfunction
 
@@ -96,77 +101,76 @@ endfun
 
 function! s:EscapeText(text) abort
     if exists('&filetype')
-        let custom_escape = 'slimy#' . substitute(&filetype, '[.]', '_', 'g') . '_EscapeText'
-        if exists('*' . custom_escape)
-            let result = call(custom_escape, [a:text])
-        end
-    end
+        let l:custom_escape = 'slimy#' . substitute(&filetype, '[.]', '_', 'g') . '_EscapeText'
+        if exists('*' . l:custom_escape)
+            let l:result = call(custom_escape, [a:text])
+        endif
+    endif
 
     " use a:text if the ftplugin didn't kick in
     if !exists('result')
-        let result = a:text
-    end
+        let l:result = a:text
+    endif
 
     " return an array, regardless
-    if type(result) == type('')
-        return [result]
+    if type(l:result) == type('')
+        return [l:result]
     else
-        return result
-    end
+        return l:result
+    endif
 endfunction
 
 function! s:Config() abort
     if !exists('b:slimy_config')
-        let b:slimy_config = {'bufnr': ''}
-    end
-    let terms = map(s:TermBufList(),'getbufinfo(v:val)[0]')
-    let choices = map(copy(terms),'s:TerminalDescription(v:key+1,v:val)')
+        let b:slimy_config = {}
+    endif
+    let l:terms = map(s:TermBufList(),'getbufinfo(v:val)[0]')
+    let l:choices = map(copy(l:terms),'s:TerminalDescription(v:key+1,v:val)')
     call add(choices, printf('%2d. <New instance>',len(terms)+1))
-    let choice = len(choices)>1
-    \            ? inputlist(choices)
-    \            : 1
-    if choice > 0
-        if choice > len(terms)
+    let l:choice = len(l:choices) > 1 ? inputlist(l:choices) : 1
+    if l:choice == 0
+        return 0  " cancel
+    else
+        if l:choice <= len(l:terms)
+            let b:slimy_config['bufnr'] = l:terms[l:choice-1]['bufnr']
+        else
             if !exists('g:slimy_terminal_cmd')
-                let cmd = input('Enter a command to run ['.&shell.']:')
-                if len(cmd)==0
-                    let cmd = &shell
+                let l:cmd = input('Enter a command to run (type nothing to cancel): ')
+                if len(l:cmd)==0
+                    return 0  " cancel
                 endif
-                let b:slimy_config['cmd'] = cmd
+                let b:slimy_config['cmd'] = l:cmd
             else
-                let cmd = g:slimy_terminal_cmd
-                let b:slimy_config['cmd'] = cmd
+                let l:cmd = g:slimy_terminal_cmd
+                let b:slimy_config['cmd'] = l:cmd
             endif
             if exists('g:slimy_terminal_config')
-                let new_id = s:Split(cmd, g:slimy_terminal_config)
+                let l:new_id = s:Split(l:cmd, g:slimy_terminal_config)
             else
-                let new_id = s:Split(cmd, {})
-            end
-            let b:slimy_config['bufnr'] = new_id
-        else
-            let b:slimy_config['bufnr'] = terms[choice-1]['bufnr']
+                let l:new_id = s:Split(l:cmd, {})
+            endif
+            let b:slimy_config['bufnr'] = l:new_id
         endif
-    else
-        return 0
+        return 1
     endif
 endfunction
 
-function! s:ConfigStillValid()
+function! s:ConfigStillValid() abort
     if has_key(b:slimy_config, 'bufnr')
-        if len(getbufinfo(b:slimy_config['bufnr']))
+        if len(getbufinfo(b:slimy_config['bufnr'])) ==# 1
             return 1
         endif
     endif
     return 0
 endfunction
 
-function! s:RenewConfig()
+function! s:RenewConfig() abort
     if has_key(b:slimy_config, 'cmd')
         if exists('g:slimy_terminal_config')
-            let new_id = s:Split(b:slimy_config['cmd'], g:slimy_terminal_config)
+            let l:new_id = s:Split(b:slimy_config['cmd'], g:slimy_terminal_config)
         else
-            let new_id = s:Split(b:slimy_config['cmd'], {})
-        end
+            let l:new_id = s:Split(b:slimy_config['cmd'], {})
+        endif
         return 1
     else
         return s:Config()
@@ -181,15 +185,15 @@ function! s:GetConfig() abort
         else
             return s:RenewConfig()
         endif
-    end
+    endif
     " assume defaults, if they exist
     if exists('g:slimy_default_config')
         let b:slimy_config = g:slimy_default_config
-    end
+    endif
     " skip confirmation, if configured
     if exists('g:slimy_dont_ask_default') && g:slimy_dont_ask_default
         return 1
-    end
+    endif
     return s:Config()
 endfunction
 
@@ -208,10 +212,10 @@ function! slimy#send_op(type, ...) abort
         return
     endif
 
-    let sel_save = &selection
+    let l:sel_save = &selection
     let &selection = 'inclusive'
-    let rv = getreg('"')
-    let rt = getregtype('"')
+    let l:rv = getreg('"')
+    let l:rt = getregtype('"')
 
     if a:0  " Invoked from Visual mode, use '< and '> marks.
         silent exe 'normal! `<' . a:type . '`>y'
@@ -226,8 +230,8 @@ function! slimy#send_op(type, ...) abort
     call setreg('"', @", 'V')
     call slimy#send(@")
 
-    let &selection = sel_save
-    call setreg('"', rv, rt)
+    let &selection = l:sel_save
+    call setreg('"', l:rv, l:rt)
 
     call s:RestoreCurPos()
 endfunction
@@ -237,11 +241,11 @@ function! slimy#send_range(startline, endline) abort
         return
     endif
 
-    let rv = getreg('"')
-    let rt = getregtype('"')
+    let l:rv = getreg('"')
+    let l:rt = getregtype('"')
     silent exe a:startline . ',' . a:endline . 'yank'
     call slimy#send(@")
-    call setreg('"', rv, rt)
+    call setreg('"', l:rv, l:rt)
 endfunction
 
 function! slimy#send_lines(count) abort
@@ -249,8 +253,8 @@ function! slimy#send_lines(count) abort
         return
     endif
 
-    let rv = getreg('"')
-    let rt = getregtype('"')
+    let l:rv = getreg('"')
+    let l:rt = getregtype('"')
     silent exe 'normal! ' . a:count . 'yy'
     call slimy#send(@")
     call setreg('"', rv, rt)
@@ -258,8 +262,8 @@ endfunction
 
 function! slimy#store_curpos() abort
     if g:slimy_preserve_curpos == 1
-        let has_getcurpos = exists('*getcurpos')
-        if has_getcurpos
+        let l:has_getcurpos = exists('*getcurpos')
+        if l:has_getcurpos
             " getcurpos() doesn't exist before 7.4.313.
             let s:cur = getcurpos()
         else
@@ -277,15 +281,15 @@ function! slimy#send(text) abort
     " this used to return a string, but some receivers (coffee-script)
     " will flush the rest of the buffer given a special sequence (ctrl-v)
     " so we, possibly, send many strings -- but probably just one
-    let pieces = s:EscapeText(a:text)
+    let l:pieces = s:EscapeText(a:text)
     for piece in pieces
         if type(piece) == 0  " a number
             if piece > 0  " sleep accepts only positive count
-                execute 'sleep' piece . 'm'
+                execute 'sleep' l:piece . 'm'
             endif
         else
-            call s:Send(b:slimy_config, piece)
-        end
+            call s:Send(b:slimy_config, l:piece)
+        endif
     endfor
 endfunction
 
