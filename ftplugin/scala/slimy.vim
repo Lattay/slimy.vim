@@ -1,3 +1,3 @@
-function! slimy#scala#EscapeText(text)
+function! slimy#scala_EscapeText(text)
   return [":paste\n", a:text, ""]
 endfunction

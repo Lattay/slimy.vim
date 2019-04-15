@@ -53,34 +53,33 @@ if has('nvim')
 else
     if !exists('*term_start')
         echoerr 'vimterminal support requires vim built with :terminal support'
-        return
+    else
+        function! s:Split(cmd, vertical) abort
+            let winid = win_getid()
+            let id = term_start(cmd, {'vertical': vertical})
+            call win_gotoid(winid)
+            return id
+        endfunction
+
+        function! s:Send(config, text)
+            let bufnr = str2nr(get(a:config,'bufnr',''))
+            if len(term_getstatus(bufnr))==0
+                echoerr 'Invalid terminal. Use :SlimyConfig to select a terminal'
+                return
+            endif
+            " Ideally we ought to be able to use a single term_sendkeys call however as
+            " of vim 8.0.1203 doing so can cause terminal display issues for longer
+            " selections of text.
+            for l in split(a:text,'\n\zs')
+                call term_sendkeys(bufnr,substitute(l,'\n','\r',''))
+                call term_wait(bufnr)
+            endfor
+        endfunction
+
+        function! s:TermBufList() abort
+            return filter(term_list(),'term_getstatus(v:val)=~"running"')
+        endfunction
     endif
-
-    function! s:Split(cmd, vertical) abort
-        let winid = win_getid()
-        let id = term_start(cmd, {'vertical': vertical})
-        call win_gotoid(winid)
-        return id
-    endfunction
-
-    function! s:Send(config, text)
-        let bufnr = str2nr(get(a:config,'bufnr',''))
-        if len(term_getstatus(bufnr))==0
-            echoerr 'Invalid terminal. Use :SlimyConfig to select a terminal'
-            return
-        endif
-        " Ideally we ought to be able to use a single term_sendkeys call however as
-        " of vim 8.0.1203 doing so can cause terminal display issues for longer
-        " selections of text.
-        for l in split(a:text,'\n\zs')
-            call term_sendkeys(bufnr,substitute(l,'\n','\r',''))
-            call term_wait(bufnr)
-        endfor
-    endfunction
-
-    function! s:TermBufList() abort
-        return filter(term_list(),'term_getstatus(v:val)=~"running"')
-    endfunction
 
 endif
 
@@ -98,7 +97,7 @@ endfun
 
 function! s:EscapeText(text) abort
     if exists('&filetype')
-        let custom_escape = 'slimy#' . substitute(&filetype, '[.]', '_', 'g') . '#EscapeText'
+        let custom_escape = 'slimy#' . substitute(&filetype, '[.]', '_', 'g') . '_EscapeText'
         if exists('*' . custom_escape)
             let result = call(custom_escape, [a:text])
         end

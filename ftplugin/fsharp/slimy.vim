@@ -1,4 +1,4 @@
-function! slimy#fsharp#EscapeText(text)
+function! slimy#fsharp_EscapeText(text)
     let trimmed = substitute(a:text, '\_s*$', '', '')
     if match(trimmed,';;\n*$') > -1
         return [trimmed,"\n"]

@@ -2,7 +2,7 @@ if !exists("g:slimy_dispatch_ipython_pause")
   let g:slimy_dispatch_ipython_pause = 100
 end
 
-function! slimy#python#EscapeText(text)
+function! slimy#python_EscapeText(text)
   if exists('g:slimy_python_ipython') && len(split(a:text,"\n")) > 1
     return ["%cpaste -q\n", g:slimy_dispatch_ipython_pause, a:text, "--\n"]
   else
