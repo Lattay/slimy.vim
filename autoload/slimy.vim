@@ -10,51 +10,57 @@ end
 " Neovim terminal
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 if has('nvim')
-    function! s:TermSplit(cmd, vertical) abort
+    function! s:Split(cmd, vertical) abort
+        let winid = win_getid()
         if a:vertical
-            exec('vsplit term://' . a:cmd)
+            exec('vsplit new')
         else
-            exec('split term://' . a:cmd)
+            exec('split new')
         endif
-        let l:id = b:terminal_job_id
-        wincmd w
-        return l:id
+
+        termopen(a:cmd)
+        let id = bufnr('%')
+        call win_gotoid(winid)
+
+        return id
     endfunction
 
     function! s:Send(config, text)
-        " Neovim jobsend is fully asynchronous, it causes some problems with
-        " iPython %cpaste (input buffering: not all lines sent over)
-        " So this s:WritePasteFile can help as a small lock & delay
-        call s:WritePasteFile(a:text)
-        call chansend(str2nr(a:config['jobid']), split(a:text, '\n', 1))
+        let bufnr = str2nr(get(a:config,'bufnr',''))
+        let var = getbufinfo(bufnr)[0]['variables']
+        if !has_key(var, 'terminal_job_id')
+            echoerr 'Invalid terminal. Use :SlimyConfig to select a terminal'
+            return
+        endif
+        let jobid = var['terminal_job_id']
+        call chansend(str2nr(jobid), split(a:text, '\n', 1))
     endfunction
 
-    function! s:Config() abort
-        if exists('b:slimy_config')
-            let l:default = b:slimy_config['jobid']
-        else
-            let b:slimy_config = {'jobid': '3'}
-            let l:default = ''
-        end
-
-        let l:res = input('existing term (type the job id) or new split (type v or s) ? ', l:default)
-
-        if l:res ==# 'v' || l:res ==# 's'
-            " ask for the command and create the split
-            let l:cmd = input('command to launch the repl: ')
-            let l:id = s:NeovimTermSplit(l:cmd, l:res ==# 'v')
-            echom 'New terminal have job id ' . l:id
-            let b:slimy_config['jobid'] = l:id
-        else
-            let b:slimy_config['jobid'] = l:res
-        end
+    function! TermBufList() abort
+        let term_buf = []
+        for buf in getbufinfo()
+            if has_key(buf['variables'], 'terminal_job_id')
+                call add(buf['bufnr'], i)
+            endif
+        endfor
+        return term_buf
     endfunction
+
+
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
     " Vim terminal
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 else
+    if !exists('*term_start')
+        echoerr 'vimterminal support requires vim built with :terminal support'
+        return
+    endif
+
     function! s:Split(cmd, vertical) abort
-        return term_start(cmd, {'vertical': vertical})
+        let winid = win_getid()
+        let id = term_start(cmd, {'vertical': vertical})
+        call win_gotoid(winid)
+        return id
     endfunction
 
     function! s:Send(config, text)
@@ -72,60 +78,25 @@ else
         endfor
     endfunction
 
-    function! s:Config() abort
-        if !exists('*term_start')
-            echoerr 'vimterminal support requires vim built with :terminal support'
-            return
-        endif
-        if !exists('b:slimy_config')
-            let b:slimy_config = {'bufnr': ''}
-        end
-        let bufs = filter(term_list(),'term_getstatus(v:val)=~"running"')
-        let terms = map(bufs,'getbufinfo(v:val)[0]')
-        let choices = map(copy(terms),'s:VimterminalDescription(v:key+1,v:val)')
-        call add(choices, printf('%2d. <New instance>',len(terms)+1))
-        let choice = len(choices)>1
-                    \ ? inputlist(choices)
-                    \ : 1
-        if choice > 0
-            if choice>len(terms)
-                if !exists('g:slimy_vimterminal_cmd')
-                    let cmd = input('Enter a command to run ['.&shell.']:')
-                    if len(cmd)==0
-                        let cmd = &shell
-                    endif
-                else
-                    let cmd = g:slimy_vimterminal_cmd
-                endif
-                let winid = win_getid()
-                if exists('g:slimy_vimterminal_config')
-                    let new_bufnr = term_start(cmd, g:slimy_vimterminal_config)
-                else
-                    let new_bufnr = term_start(cmd)
-                end
-                call win_gotoid(winid)
-                let b:slimy_config['bufnr'] = new_bufnr
-            else
-                let b:slimy_config['bufnr'] = terms[choice-1].bufnr
-            endif
-        endif
+    function! s:TermBufList() abort
+        return filter(term_list(),'term_getstatus(v:val)=~"running"')
     endfunction
+
 endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Helpers
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-function! s:SID()
+function! s:TerminalDescription(n, term) abort
+    return a:n . '. ' . '#' . a:term['bufnr'] . a:term['name']
+endfunction
+
+function! s:SID() abort
     return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
 endfun
 
-function! s:WritePasteFile(text)
-    " could check exists("*writefile")
-    call system('cat > ' . g:slimy_paste_file, a:text)
-endfunction
-
-function! s:EscapeText(text)
+function! s:EscapeText(text) abort
     if exists('&filetype')
         let custom_escape = 'slimy#' . substitute(&filetype, '[.]', '_', 'g') . '#EscapeText'
         if exists('*' . custom_escape)
@@ -146,7 +117,7 @@ function! s:EscapeText(text)
     end
 endfunction
 
-function! s:GetConfig()
+function! s:GetConfig() abort
     " b:slimy_config already configured...
     if exists('b:slimy_config')
         return
@@ -159,11 +130,39 @@ function! s:GetConfig()
     if exists('g:slimy_dont_ask_default') && g:slimy_dont_ask_default
         return
     end
-    " prompt user
-    call s:SlimyDispatch('Config')
+
+    if !exists('b:slimy_config')
+        let b:slimy_config = {'termid': ''}
+    end
+    let terms = map(s:TermBufList(),'getbufinfo(v:val)[0]')
+    let choices = map(copy(terms),'s:TerminalDescription(v:key+1,v:val)')
+    call add(choices, printf('%2d. <New instance>',len(terms)+1))
+    let choice = len(choices)>1
+                \ ? inputlist(choices)
+                \ : 1
+    if choice > 0
+        if choice > len(terms)
+            if !exists('g:slimy_vimterminal_cmd')
+                let cmd = input('Enter a command to run ['.&shell.']:')
+                if len(cmd)==0
+                    let cmd = &shell
+                endif
+            else
+                let cmd = g:slimy_terminal_cmd
+            endif
+            if exists('g:slimy_terminal_config')
+                let new_id = s:Split(cmd, g:slimy_terminal_config)
+            else
+                let new_id = s:Split(cmd)
+            end
+            let b:slimy_config['bufnr'] = new_id
+        else
+            let b:slimy_config['bufnr'] = terms[choice-1]['bufnr']
+        endif
+    endif
 endfunction
 
-function! s:SlimyRestoreCurPos()
+function! s:RestoreCurPos() abort
     if g:slimy_preserve_curpos == 1 && exists('s:cur')
         call setpos('.', s:cur)
         unlet s:cur
@@ -194,7 +193,7 @@ function! slimy#send_lines(count) abort
     call setreg('"', rv, rt)
 endfunction
 
-function! slimy#store_curpos()
+function! slimy#store_curpos() abort
     if g:slimy_preserve_curpos == 1
         let has_getcurpos = exists('*getcurpos')
         if has_getcurpos
@@ -207,7 +206,7 @@ function! slimy#store_curpos()
 endfunction
 
 
-function! slimy#send(text)
+function! slimy#send(text) abort
     call s:GetConfig()
 
     " this used to return a string, but some receivers (coffee-script)
