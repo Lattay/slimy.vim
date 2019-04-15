@@ -40,7 +40,7 @@ if has('nvim')
         let term_buf = []
         for buf in getbufinfo()
             if has_key(buf['variables'], 'terminal_job_id')
-                call add(buf['bufnr'], i)
+                call add(term_buf, buf['bufnr'])
             endif
         endfor
         return term_buf
@@ -56,7 +56,7 @@ else
     else
         function! s:Split(cmd, config) abort
             let winid = win_getid()
-            let id = term_start(cmd, config)
+            let id = term_start(a:cmd, a:config)
             call win_gotoid(winid)
             return id
         endfunction
@@ -77,7 +77,7 @@ else
         endfunction
 
         function! s:TermBufList() abort
-            return filter(term_list(),'term_getstatus(v:val)=~"running"')
+            return filter(term_list(),'term_getstatus(v:val) =~# "running"')
         endfunction
     endif
 
@@ -116,20 +116,7 @@ function! s:EscapeText(text) abort
     end
 endfunction
 
-function! s:GetConfig() abort
-    " b:slimy_config already configured...
-    if exists('b:slimy_config')
-        return
-    end
-    " assume defaults, if they exist
-    if exists('g:slimy_default_config')
-        let b:slimy_config = g:slimy_default_config
-    end
-    " skip confirmation, if configured
-    if exists('g:slimy_dont_ask_default') && g:slimy_dont_ask_default
-        return
-    end
-
+function! s:Config() abort
     if !exists('b:slimy_config')
         let b:slimy_config = {'termid': ''}
     end
@@ -137,8 +124,8 @@ function! s:GetConfig() abort
     let choices = map(copy(terms),'s:TerminalDescription(v:key+1,v:val)')
     call add(choices, printf('%2d. <New instance>',len(terms)+1))
     let choice = len(choices)>1
-                \ ? inputlist(choices)
-                \ : 1
+    \           ? inputlist(choices)
+    \            : 1
     if choice > 0
         if choice > len(terms)
             if !exists('g:slimy_vimterminal_cmd')
@@ -161,6 +148,22 @@ function! s:GetConfig() abort
     endif
 endfunction
 
+function! s:GetConfig() abort
+    " b:slimy_config already configured...
+    if exists('b:slimy_config')
+        return
+    end
+    " assume defaults, if they exist
+    if exists('g:slimy_default_config')
+        let b:slimy_config = g:slimy_default_config
+    end
+    " skip confirmation, if configured
+    if exists('g:slimy_dont_ask_default') && g:slimy_dont_ask_default
+        return
+    end
+    call s:Config()
+endfunction
+
 function! s:RestoreCurPos() abort
     if g:slimy_preserve_curpos == 1 && exists('s:cur')
         call setpos('.', s:cur)
@@ -175,18 +178,18 @@ function! slimy#send_op(type, ...) abort
     call s:GetConfig()
 
     let sel_save = &selection
-    let &selection = "inclusive"
+    let &selection = 'inclusive'
     let rv = getreg('"')
     let rt = getregtype('"')
 
     if a:0  " Invoked from Visual mode, use '< and '> marks.
-        silent exe "normal! `<" . a:type . '`>y'
-    elseif a:type == 'line'
+        silent exe 'normal! `<' . a:type . '`>y'
+    elseif a:type ==# 'line'
         silent exe "normal! '[V']y"
-    elseif a:type == 'block'
+    elseif a:type ==# 'block'
         silent exe "normal! `[\<C-V>`]\y"
     else
-        silent exe "normal! `[v`]y"
+        silent exe 'normal! `[v`]y'
     endif
 
     call setreg('"', @", 'V')
@@ -251,7 +254,7 @@ endfunction
 
 function! slimy#config() abort
     call inputsave()
-    call s:Config()
+    call s:Config(1)
     call inputrestore()
 endfunction
 
