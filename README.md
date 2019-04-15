@@ -65,12 +65,12 @@ There are two mapping by default:
 * <C-c><C-c> to send a paragraph or a selection to the REPL
 * <C-c>v to reconfigure slimy
 
-If you want to override the mappings (for example to use `&&` and `&c`) put
+If you want to override the mappings (for example to use `!!` and `!c`) put
 the following in your vimrc 
 ``` 
-nmap && <Plug>(slimy_send_region)
-xmap && <Plug>(slimy_send_paragraph)
-nmap &c <Plug>(slimy_config)
+nmap !! <Plug>(slimy_send_region)
+xmap !! <Plug>(slimy_send_paragraph)
+nmap !c <Plug>(slimy_config)
 ```
 
 There are thwo other mapping defined but not bound by default:
