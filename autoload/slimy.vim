@@ -87,7 +87,7 @@ endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 function! s:TerminalDescription(n, term) abort
-    return printf('%2d. ',a:n, a:term['name'])
+    return printf('%2d. %s',a:n, a:term['name'])
 endfunction
 
 function! s:SID() abort
@@ -117,7 +117,7 @@ endfunction
 
 function! s:Config() abort
     if !exists('b:slimy_config')
-        let b:slimy_config = {'termid': ''}
+        let b:slimy_config = {'bufnr': ''}
     end
     let terms = map(s:TermBufList(),'getbufinfo(v:val)[0]')
     let choices = map(copy(terms),'s:TerminalDescription(v:key+1,v:val)')
@@ -146,6 +146,8 @@ function! s:Config() abort
         else
             let b:slimy_config['bufnr'] = terms[choice-1]['bufnr']
         endif
+    else
+        return 0
     endif
 endfunction
 
@@ -165,8 +167,9 @@ function! s:RenewConfig()
         else
             let new_id = s:Split(b:slimy_config['cmd'], {})
         end
+        return 1
     else
-        call s:Config()
+        return s:Config()
     endif
 endfunction
 
@@ -174,9 +177,9 @@ function! s:GetConfig() abort
     " b:slimy_config already configured...
     if exists('b:slimy_config')
         if s:ConfigStillValid()
-            return
+            return 1
         else
-            call s:RenewConfig()
+            return s:RenewConfig()
         endif
     end
     " assume defaults, if they exist
@@ -185,9 +188,9 @@ function! s:GetConfig() abort
     end
     " skip confirmation, if configured
     if exists('g:slimy_dont_ask_default') && g:slimy_dont_ask_default
-        return
+        return 1
     end
-    call s:Config()
+    return s:Config()
 endfunction
 
 function! s:RestoreCurPos() abort
@@ -201,7 +204,9 @@ endfunction
 " Public interface
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! slimy#send_op(type, ...) abort
-    call s:GetConfig()
+    if !s:GetConfig()
+        return
+    endif
 
     let sel_save = &selection
     let &selection = 'inclusive'
@@ -228,7 +233,9 @@ function! slimy#send_op(type, ...) abort
 endfunction
 
 function! slimy#send_range(startline, endline) abort
-    call s:GetConfig()
+    if !s:GetConfig()
+        return
+    endif
 
     let rv = getreg('"')
     let rt = getregtype('"')
@@ -238,7 +245,9 @@ function! slimy#send_range(startline, endline) abort
 endfunction
 
 function! slimy#send_lines(count) abort
-    call s:GetConfig()
+    if !s:GetConfig()
+        return
+    endif
 
     let rv = getreg('"')
     let rt = getregtype('"')
@@ -261,7 +270,9 @@ endfunction
 
 
 function! slimy#send(text) abort
-    call s:GetConfig()
+    if !s:GetConfig()
+        return
+    endif
 
     " this used to return a string, but some receivers (coffee-script)
     " will flush the rest of the buffer given a special sequence (ctrl-v)
@@ -280,7 +291,7 @@ endfunction
 
 function! slimy#config() abort
     call inputsave()
-    call s:Config(1)
+    call s:Config()
     call inputrestore()
 endfunction
 
