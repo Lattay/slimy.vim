@@ -1,6 +1,6 @@
 " GHC before 8.0.1 does not support top-level bindings
-if !exists('g:slime_haskell_ghci_add_let')
-    let g:slime_haskell_ghci_add_let = 1
+if !exists('g:slimy_haskell_ghci_add_let')
+    let g:slimy_haskell_ghci_add_let = 1
 endif
 
 " Remove '>' on line beginning in literate haskell
@@ -36,7 +36,7 @@ endfunction
 " lines are indented equally, so indentation is preserved.
 function! s:Indent_lines(lines)
     let l:lines = a:lines
-    let l:indent = slime#common#get_indent_string()
+    let l:indent = slimy#common#get_indent_string()
     let l:i = 1
     let l:len = len(l:lines)
     while l:i < l:len
@@ -89,41 +89,41 @@ function! s:FilterImportLines(lines)
     return [l:matches, l:noMatches]
 endfunction
 
-" vim slime handler
+" slimy handler
 function! _EscapeText_lhaskell(text)
     let l:text  = s:Remove_block_comments(a:text)
-    let l:lines = slime#common#lines(slime#common#tab_to_spaces(l:text))
+    let l:lines = slimy#common#lines(slimy#common#tab_to_spaces(l:text))
     let l:lines = s:Remove_initial_gt(l:lines)
     let [l:imports, l:nonImports] = s:FilterImportLines(l:lines)
     let l:lines = s:Remove_line_comments(l:nonImports)
 
-    if g:slime_haskell_ghci_add_let
+    if g:slimy_haskell_ghci_add_let
         let l:lines = s:Perhaps_prepend_let(l:lines)
         let l:lines = s:Indent_lines(l:lines)
     endif
 
     let l:lines = Wrap_if_multi(l:lines)
-    return slime#common#unlines(l:imports + l:lines)
+    return slimy#common#unlines(l:imports + l:lines)
 endfunction
 
 function! _EscapeText_haskell(text)
     let l:text  = s:Remove_block_comments(a:text)
-    let l:lines = slime#common#lines(slime#common#tab_to_spaces(l:text))
+    let l:lines = slimy#common#lines(slimy#common#tab_to_spaces(l:text))
     let [l:imports, l:nonImports] = s:FilterImportLines(l:lines)
     let l:lines = s:Remove_line_comments(l:nonImports)
 
-    if g:slime_haskell_ghci_add_let
+    if g:slimy_haskell_ghci_add_let
         let l:lines = s:Perhaps_prepend_let(l:lines)
         let l:lines = s:Indent_lines(l:lines)
     endif
 
     let l:lines = Wrap_if_multi(l:lines)
-    return slime#common#unlines(l:imports + l:lines)
+    return slimy#common#unlines(l:imports + l:lines)
 endfunction
 
 function! _EscapeText_haskell_script(text)
     let l:text  = s:Remove_block_comments(a:text)
-    let l:lines = slime#common#lines(slime#common#tab_to_spaces(l:text))
+    let l:lines = slimy#common#lines(slimy#common#tab_to_spaces(l:text))
     let l:lines = s:Remove_line_comments(l:lines)
-    return slime#common#unlines(l:lines)
+    return slimy#common#unlines(l:lines)
 endfunction

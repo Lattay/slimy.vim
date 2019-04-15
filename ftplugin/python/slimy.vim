@@ -1,11 +1,11 @@
 
-if !exists("g:slime_dispatch_ipython_pause")
-  let g:slime_dispatch_ipython_pause = 100
+if !exists("g:slimy_dispatch_ipython_pause")
+  let g:slimy_dispatch_ipython_pause = 100
 end
 
 function! _EscapeText_python(text)
-  if exists('g:slime_python_ipython') && len(split(a:text,"\n")) > 1
-    return ["%cpaste -q\n", g:slime_dispatch_ipython_pause, a:text, "--\n"]
+  if exists('g:slimy_python_ipython') && len(split(a:text,"\n")) > 1
+    return ["%cpaste -q\n", g:slimy_dispatch_ipython_pause, a:text, "--\n"]
   else
     let empty_lines_pat = '\(^\|\n\)\zs\(\s*\n\+\)\+'
     let no_empty_lines = substitute(a:text, empty_lines_pat, "", "g")

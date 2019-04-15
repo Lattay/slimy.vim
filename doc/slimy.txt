@@ -1,6 +1,6 @@
 *slime.txt*   Grab some text and "send" it to a GNU Screen / tmux / whimrepl session.
 
-Author:  Jonathan Palardy                                    *slime-author*
+Author:  Jonathan Palardy, Théo Cavignac (Lattay)                     *slime-author*
 License: Same terms as Vim itself (see |license|)
 
 This plugin is only available if 'compatible' is not set.

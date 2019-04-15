@@ -1,7 +1,10 @@
+### Haskell /!\ Disclaimer
 
-### Haskell
-
-This plugin has support for sending Haskell source code to `ghci`.
+[vim-slime](https://github.com/jpalardy/vim-slime) has support for sending Haskell
+source code to `ghci`. This plugin reuse the same code as is (with renaming) but
+I do not feel able to provide any kind of support for haskell since it is
+managed with a lot of tricks and I do not use it at all.
+The following is the original README at the time I forked the project.
 
 #### Sending normal code
 
@@ -23,7 +26,7 @@ This translates to the following:
 Some of this behavior can be selectively turned off so that what is run is more
 faithful to the actual code in your buffer, but requires a recent enough GHC:
 
-* `let g:slime_haskell_ghci_add_let = 0` disables the transformation of
+* `let g:slimy_haskell_ghci_add_let = 0` disables the transformation of
   top-level bindings into a let binding; requires GHC 8.0.1 or later
 
 #### Sending GHCi scripts

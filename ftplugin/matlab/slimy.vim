@@ -8,9 +8,9 @@ function! s:Remove_line_comments(lines)
     return filter(copy(a:lines), "!s:Is_comment(v:val)")
 endfunction
 
-" vim slime handler
+" slimy handler
 function! _EscapeText_matlab(text)
-    let l:lines = slime#common#lines(slime#common#tab_to_spaces(a:text))
+    let l:lines = slimy#common#lines(slimy#common#tab_to_spaces(a:text))
     let l:lines = s:Remove_line_comments(l:lines)
-    return slime#common#unlines(l:lines)
+    return slimy#common#unlines(l:lines)
 endfunction
