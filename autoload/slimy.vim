@@ -46,7 +46,6 @@ if has('nvim')
         return term_buf
     endfunction
 
-
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
     " Vim terminal
     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -88,7 +87,7 @@ endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 function! s:TerminalDescription(n, term) abort
-    return a:n . '. ' . '#' . a:term['bufnr'] . a:term['name']
+    return printf('%2d. ',a:n, a:term['name'])
 endfunction
 
 function! s:SID() abort
@@ -124,17 +123,19 @@ function! s:Config() abort
     let choices = map(copy(terms),'s:TerminalDescription(v:key+1,v:val)')
     call add(choices, printf('%2d. <New instance>',len(terms)+1))
     let choice = len(choices)>1
-    \           ? inputlist(choices)
+    \            ? inputlist(choices)
     \            : 1
     if choice > 0
         if choice > len(terms)
-            if !exists('g:slimy_vimterminal_cmd')
+            if !exists('g:slimy_terminal_cmd')
                 let cmd = input('Enter a command to run ['.&shell.']:')
                 if len(cmd)==0
                     let cmd = &shell
                 endif
+                let b:slimy_config['cmd'] = cmd
             else
                 let cmd = g:slimy_terminal_cmd
+                let b:slimy_config['cmd'] = cmd
             endif
             if exists('g:slimy_terminal_config')
                 let new_id = s:Split(cmd, g:slimy_terminal_config)
@@ -148,10 +149,35 @@ function! s:Config() abort
     endif
 endfunction
 
+function! s:ConfigStillValid()
+    if has_key(b:slimy_config, 'bufnr')
+        if len(getbufinfo(b:slimy_config['bufnr']))
+            return 1
+        endif
+    endif
+    return 0
+endfunction
+
+function! s:RenewConfig()
+    if has_key(b:slimy_config, 'cmd')
+        if exists('g:slimy_terminal_config')
+            let new_id = s:Split(b:slimy_config['cmd'], g:slimy_terminal_config)
+        else
+            let new_id = s:Split(b:slimy_config['cmd'], {})
+        end
+    else
+        call s:Config()
+    endif
+endfunction
+
 function! s:GetConfig() abort
     " b:slimy_config already configured...
     if exists('b:slimy_config')
-        return
+        if s:ConfigStillValid()
+            return
+        else
+            call s:RenewConfig()
+        endif
     end
     " assume defaults, if they exist
     if exists('g:slimy_default_config')
