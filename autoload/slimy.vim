@@ -134,17 +134,26 @@ function! s:Config() abort
         if l:choice <= len(l:terms)
             let b:slimy_config['bufnr'] = l:terms[l:choice-1]['bufnr']
         else
-            if !exists('g:slimy_terminal_cmd')
+            if !has_key(b:slimy_config, 'cmd')
                 let l:cmd = input('Enter a command to run (type nothing to cancel): ')
                 if len(l:cmd)==0
                     return 0  " cancel
                 endif
                 let b:slimy_config['cmd'] = l:cmd
+            elseif (!exists('b:slimy_confirm_cmd') || !b:slimy_confirm_cmd)
+            \      && (!exists('g:slimy_confirm_cmd') || !g:slimy_confirm_cmd)
+                let l:cmd = input('Enter a command to run (type nothing to cancel): ', b:slimy_config['cmd'])
+                if len(l:cmd)==0
+                    return 0  " cancel
+                endif
+                let b:slimy_config['cmd'] = l:cmd
             else
-                let l:cmd = g:slimy_terminal_cmd
+                let l:cmd = b:slimy_config['cmd']
                 let b:slimy_config['cmd'] = l:cmd
             endif
-            if exists('g:slimy_terminal_config')
+            if exists('b:slimy_terminal_config')
+                let l:new_id = s:Split(l:cmd, b:slimy_terminal_config)
+            elseif  exists('g:slimy_terminal_config')
                 let l:new_id = s:Split(l:cmd, g:slimy_terminal_config)
             else
                 let l:new_id = s:Split(l:cmd, {})
@@ -164,36 +173,16 @@ function! s:ConfigStillValid() abort
     return 0
 endfunction
 
-function! s:RenewConfig() abort
-    if has_key(b:slimy_config, 'cmd')
-        if exists('g:slimy_terminal_config')
-            let l:new_id = s:Split(b:slimy_config['cmd'], g:slimy_terminal_config)
-        else
-            let l:new_id = s:Split(b:slimy_config['cmd'], {})
-        endif
-        let b:slimy_config['bufnr'] = l:new_id
-        return 1
-    else
-        return s:Config()
-    endif
-endfunction
-
 function! s:GetConfig() abort
     " b:slimy_config already configured...
     if exists('b:slimy_config')
         if s:ConfigStillValid()
             return 1
-        else
-            return s:RenewConfig()
         endif
     endif
     " assume defaults, if they exist
     if exists('g:slimy_default_config')
         let b:slimy_config = g:slimy_default_config
-    endif
-    " skip confirmation, if configured
-    if exists('g:slimy_dont_ask_default') && g:slimy_dont_ask_default
-        return 1
     endif
     return s:Config()
 endfunction
