@@ -1,4 +1,4 @@
-if existsy('g:loaded_slimy') || &cp || v:version < 700
+if exists('g:loaded_slimy') || &cp || v:version < 700
     finish
 endif
 let g:loaded_slimy = 1
@@ -22,15 +22,15 @@ noremap <unique> <script> <silent> <Plug>(slimy_paragraph_send) <SID>Operatorip
 noremap <unique> <script> <silent> <Plug>(slimy_config) :<c-u>SlimyConfig<cr>
 
 if !exists('g:slimy_no_mappings') || !g:slimy_no_mappings
-    if !hasmapto('<Plug>SlimyRegionSend', 'x')
+    if !hasmapto('<Plug>(slimy_region_send)', 'x')
         xmap <c-c><c-c> <Plug>(slimy_region_send)
     endif
 
-    if !hasmapto('<Plug>SlimyParagraphSend', 'n')
+    if !hasmapto('<Plug>(slimy_paragraph_send)', 'n')
         nmap <c-c><c-c> <Plug>(slimy_paragraph_send)
     endif
 
-    if !hasmapto('<Plug>SlimyConfig', 'n')
+    if !hasmapto('<Plug>(slimy_config)', 'n')
         nmap <c-c>v <Plug>(slimy_config)
     endif
 endif
