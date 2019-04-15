@@ -43,7 +43,7 @@ Plug 'lattay/vim-slime' call
 plug#end()
 ```
 
-    If you don't like this installation you probably know what to do.
+If you don't like this installation you probably know what to do.
 
 ## Usage
 
