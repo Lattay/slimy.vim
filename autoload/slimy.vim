@@ -10,15 +10,15 @@ end
 " Neovim terminal
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 if has('nvim')
-    function! s:Split(cmd, vertical) abort
+    function! s:Split(cmd, config) abort
         let winid = win_getid()
-        if a:vertical
+        if has_key(a:config, 'vertical') && a:config['vertical']
             exec('vsplit new')
         else
             exec('split new')
         endif
 
-        termopen(a:cmd)
+        call termopen(a:cmd)
         let id = bufnr('%')
         call win_gotoid(winid)
 
@@ -36,7 +36,7 @@ if has('nvim')
         call chansend(str2nr(jobid), split(a:text, '\n', 1))
     endfunction
 
-    function! TermBufList() abort
+    function! s:TermBufList() abort
         let term_buf = []
         for buf in getbufinfo()
             if has_key(buf['variables'], 'terminal_job_id')
@@ -54,9 +54,9 @@ else
     if !exists('*term_start')
         echoerr 'vimterminal support requires vim built with :terminal support'
     else
-        function! s:Split(cmd, vertical) abort
+        function! s:Split(cmd, config) abort
             let winid = win_getid()
-            let id = term_start(cmd, {'vertical': vertical})
+            let id = term_start(cmd, config)
             call win_gotoid(winid)
             return id
         endfunction
@@ -152,7 +152,7 @@ function! s:GetConfig() abort
             if exists('g:slimy_terminal_config')
                 let new_id = s:Split(cmd, g:slimy_terminal_config)
             else
-                let new_id = s:Split(cmd)
+                let new_id = s:Split(cmd, {})
             end
             let b:slimy_config['bufnr'] = new_id
         else
@@ -171,6 +171,32 @@ endfunction
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Public interface
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! slimy#send_op(type, ...) abort
+    call s:GetConfig()
+
+    let sel_save = &selection
+    let &selection = "inclusive"
+    let rv = getreg('"')
+    let rt = getregtype('"')
+
+    if a:0  " Invoked from Visual mode, use '< and '> marks.
+        silent exe "normal! `<" . a:type . '`>y'
+    elseif a:type == 'line'
+        silent exe "normal! '[V']y"
+    elseif a:type == 'block'
+        silent exe "normal! `[\<C-V>`]\y"
+    else
+        silent exe "normal! `[v`]y"
+    endif
+
+    call setreg('"', @", 'V')
+    call slimy#send(@")
+
+    let &selection = sel_save
+    call setreg('"', rv, rt)
+
+    call s:RestoreCurPos()
+endfunction
 
 function! slimy#send_range(startline, endline) abort
     call s:GetConfig()
@@ -211,7 +237,7 @@ function! slimy#send(text) abort
     " this used to return a string, but some receivers (coffee-script)
     " will flush the rest of the buffer given a special sequence (ctrl-v)
     " so we, possibly, send many strings -- but probably just one
-    let pieces = s:_EscapeText(a:text)
+    let pieces = s:EscapeText(a:text)
     for piece in pieces
         if type(piece) == 0  " a number
             if piece > 0  " sleep accepts only positive count
