@@ -1,5 +1,3 @@
-
-function! _EscapeText_coffee(text)
+function! slimy#coffee#EscapeText(text)
   return ["", a:text, ""]
 endfunction
-

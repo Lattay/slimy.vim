@@ -1,4 +1,4 @@
-function! _EscapeText_sml(text)
+function! slimy#sml#EscapeText(text)
     let trimmed = substitute(a:text, '\_s*$', '', '')
     if match(trimmed, ';\n*$') > -1
         return [trimmed, "\n"]

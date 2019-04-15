@@ -1,9 +1,8 @@
-
 if !exists("g:slimy_dispatch_ipython_pause")
   let g:slimy_dispatch_ipython_pause = 100
 end
 
-function! _EscapeText_python(text)
+function! slimy#python#EscapeText(text)
   if exists('g:slimy_python_ipython') && len(split(a:text,"\n")) > 1
     return ["%cpaste -q\n", g:slimy_dispatch_ipython_pause, a:text, "--\n"]
   else
@@ -16,4 +15,3 @@ function! _EscapeText_python(text)
     return substitute(dedented_lines, add_eol_pat, "\n", "g")
   end
 endfunction
-

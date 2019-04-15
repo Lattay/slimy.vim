@@ -90,7 +90,7 @@ function! s:FilterImportLines(lines)
 endfunction
 
 " slimy handler
-function! _EscapeText_lhaskell(text)
+function! slimy#lhaskell#EscapeText(text)
     let l:text  = s:Remove_block_comments(a:text)
     let l:lines = slimy#common#lines(slimy#common#tab_to_spaces(l:text))
     let l:lines = s:Remove_initial_gt(l:lines)
@@ -106,7 +106,7 @@ function! _EscapeText_lhaskell(text)
     return slimy#common#unlines(l:imports + l:lines)
 endfunction
 
-function! _EscapeText_haskell(text)
+function! slimy#haskell#EscapeText(text)
     let l:text  = s:Remove_block_comments(a:text)
     let l:lines = slimy#common#lines(slimy#common#tab_to_spaces(l:text))
     let [l:imports, l:nonImports] = s:FilterImportLines(l:lines)
@@ -121,7 +121,7 @@ function! _EscapeText_haskell(text)
     return slimy#common#unlines(l:imports + l:lines)
 endfunction
 
-function! _EscapeText_haskell_script(text)
+function! slimy#haskell_script#EscapeText(text)
     let l:text  = s:Remove_block_comments(a:text)
     let l:lines = slimy#common#lines(slimy#common#tab_to_spaces(l:text))
     let l:lines = s:Remove_line_comments(l:lines)
