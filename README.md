@@ -24,9 +24,9 @@ It work on any NeoVim build, and on all Vim 8.x with terminal support enabled.
 If you use a [REPL](http://en.wikipedia.org/wiki/REPL), maybe Clojure, R or
 python, you may find this package useful.  As long as you can type text into
 your target program, slimy can use it.  You just have to open your file with
-vim, go to the code you want to send to your REPL and hit `CTRL-C CTRL-C`. slimy
-will prompt you for a command for the REPL if it is not opened yet of try to
-guess what buffer is your REPL (and ask for confirmation).
+vim, go to the code you want to send to your REPL and hit `CTRL-C CTRL-C`.
+slimy.vim will prompt you for a command for the REPL if it is not opened yet
+of try to guess what buffer is your REPL (and ask for confirmation).
 
 The reason you're doing this? Because you want the benefits of a REPL and the
 benefits of using Vim (familiar environment, syntax highlighting, persistence
@@ -79,10 +79,15 @@ There are thwo other mapping defined but not bound by default:
     corresponding content to the REPL. Use this to implement smarter
     selection.
 
-## Options If you use always the same command for one language you may want to
+## Options
+
+If you use always the same command for one language you may want to
 specify it in your ftplugin directory. For example put the following in
-_~/.vim/ftplugin/python.vim_ (or _~/.config/nvim/ftplugin/python.vim_) ``` let
-g:slimy_config = {'cmd': 'python'} ```
+_~/.vim/ftplugin/python.vim_ (or _~/.config/nvim/ftplugin/python.vim_)
+
+```
+let g:slimy_config = {'cmd': 'python'}
+```
 
 If you do not want to be prompted for confirmation add 
 ```
@@ -107,7 +112,9 @@ The previous variables all have a buffer local counterpart with the
 If you want to disable automatic mappings (they are not done if you
 override them) you can use ``` let g:slimy_no_mappings = 1 ```
 
-## Functions Public functions are the following
+## Functions
+
+Public functions are the following :
 
 * `slimy#config()` reconfigure slimy
 * `slimy#send_op(type, ...)` send the text covered by the last movement,
