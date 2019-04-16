@@ -11,7 +11,7 @@ endfunction
 
 " This on is used as a opfunc
 function! slimy#send_op(type, ...) abort
-    if !slimy#config#check_config()
+    if !slimy#config#get_config()
         return
     endif
 

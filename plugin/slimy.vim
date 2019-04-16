@@ -3,6 +3,8 @@ if exists('g:loaded_slimy') || &compatible || v:version < 700
 endif
 let g:loaded_slimy = 1
 
+call slimy#config#pre_config()
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Setup key bindings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

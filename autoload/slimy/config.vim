@@ -1,11 +1,6 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Configuration
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-if !exists('g:slimy_preserve_curpos')
-    let g:slimy_preserve_curpos = 1
-endif
-
 " Private helpers
 
 if has('nvim')
@@ -38,6 +33,11 @@ function! s:ConfigStillValid() abort
 endfunction
 
 " Public interface
+function! slimy#config#pre_config() abort
+    if !exists('g:slimy_preserve_curpos')
+        let g:slimy_preserve_curpos = 1
+    endif
+endfunction
 
 function! slimy#config#config() abort
     if !exists('b:slimy_config')
