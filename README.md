@@ -81,18 +81,37 @@ There are thwo other mapping defined but not bound by default:
 
 ## Options
 
-If you use always the same command for one language you may want to
-specify it in your ftplugin directory. For example put the following in
-_~/.vim/ftplugin/python.vim_ (or _~/.config/nvim/ftplugin/python.vim_)
+You can configure slimy with a default behaviour and specific behaviour for each
+file type. For example:
 
 ```
-let g:slimy_config = {'cmd': 'python'}
+let g:slimy_config = {
+\    '*': {
+\         'cmd': 'bash'
+\    },
+\    'python': {
+\         'cmd': 'python3', 
+\         'confirm': 0
+\    },
+\    'lua': {
+\         'cmd': 'luajit'
+\    }
+\}
 ```
 
-If you do not want to be prompted for confirmation add 
+Any filetype can be used as a key. `'*'` is the "default filetype" used when the
+current filetype is not found in `g:slimy_config`.
+
+You can override this configuration per buffer with the following:
 ```
-let g:slimy_confirm_cmd = 0
+let b:slimy_config {'cmd': 'python2.7', 'confirm': 0}
 ```
+
+Currently supported options are:
+* `'cmd'` the command to be run in a new terminal
+* `'confirm'` whether you want to be prompted (`1` the default) or not (`0`)  
+* `'bufnr'` the id of the buffer of the terminal. Does not make sense in the
+  global config but is present in the buffer wide config.
 
 If you want to customize the way the new terminal is created you can use
 ```
@@ -106,11 +125,12 @@ open the terminal vertically by default.
 ```
 let g:slimy_terminal_config = {'vertical': 1} 
 ```
-The previous variables all have a buffer local counterpart with the
-`b:` prefix.
 
 If you want to disable automatic mappings (they are not done if you
-override them) you can use ``` let g:slimy_no_mappings = 1 ```
+override them) you can use 
+```
+let g:slimy_no_mappings = 1
+```
 
 ## Functions
 

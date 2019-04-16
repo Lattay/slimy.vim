@@ -37,6 +37,9 @@ function! slimy#config#pre_config() abort
     if !exists('g:slimy_preserve_curpos')
         let g:slimy_preserve_curpos = 1
     endif
+    if !exists('g:slimy_terminal_config')
+        let g:slimy_terminal_config = {'vertical': 0}
+    endif
 endfunction
 
 function! slimy#config#config() abort
@@ -59,8 +62,7 @@ function! slimy#config#config() abort
                     return 0  " cancel
                 endif
                 let b:slimy_config['cmd'] = l:cmd
-            elseif (!exists('b:slimy_confirm_cmd') || !b:slimy_confirm_cmd)
-            \      && (!exists('g:slimy_confirm_cmd') || !g:slimy_confirm_cmd)
+            elseif !has_key(b:slimy_config, 'confirm') || b:slimy_config['confirm']
                 let l:cmd = input('Enter a command to run (type nothing to cancel): ', b:slimy_config['cmd'])
                 if len(l:cmd)==0
                     return 0  " cancel
@@ -72,10 +74,8 @@ function! slimy#config#config() abort
             endif
             if exists('b:slimy_terminal_config')
                 let l:new_id = slimy#split#split(l:cmd, b:slimy_terminal_config)
-            elseif  exists('g:slimy_terminal_config')
-                let l:new_id = slimy#split#split(l:cmd, g:slimy_terminal_config)
             else
-                let l:new_id = slimy#split#split(l:cmd, {})
+                let l:new_id = slimy#split#split(l:cmd, g:slimy_terminal_config)
             endif
             let b:slimy_config['bufnr'] = l:new_id
         endif
@@ -89,10 +89,16 @@ function! slimy#config#get_config() abort
         if s:ConfigStillValid()
             return 1
         endif
+        return slimy#config#config()
     endif
     " assume defaults, if they exist
-    if exists('g:slimy_default_config')
-        let b:slimy_config = g:slimy_default_config
+    if exists('g:slimy_config')
+        let l:type = &filetype
+        if has_key(g:slimy_config, l:type)
+            let b:slimy_config = g:slimy_config[l:type]
+        elseif has_key(g:slimy_config, '*')
+            let b:slimy_config = g:slimy_config['*']
+        endif
     endif
     return slimy#config#config()
 endfunction
