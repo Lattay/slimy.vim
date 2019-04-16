@@ -68,8 +68,8 @@ There are two mapping by default:
 If you want to override the mappings (for example to use `!!` and `!c`) put
 the following in your vimrc 
 ``` 
-nmap !! <Plug>(slimy_send_region)
-xmap !! <Plug>(slimy_send_paragraph)
+nmap !! <Plug>(slimy_send_paragraph)
+xmap !! <Plug>(slimy_send_region)
 nmap !c <Plug>(slimy_config)
 ```
 
