@@ -96,6 +96,7 @@ function! slimy#send(text) abort
 endfunction
 
 function! slimy#config() abort
+    unlet b:slimy_config
     call inputsave()
     call slimy#config#config()
     call inputrestore()

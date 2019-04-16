@@ -33,6 +33,7 @@ function! s:ConfigStillValid() abort
 endfunction
 
 " Public interface
+
 function! slimy#config#pre_config() abort
     if !exists('g:slimy_preserve_curpos')
         let g:slimy_preserve_curpos = 1
