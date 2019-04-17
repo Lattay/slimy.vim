@@ -80,7 +80,7 @@ There are thwo other mapping defined but not bound by default:
     selection. This is obviously the most powerfull of all mappings. For example
     you can do things like that:
 ```
-" The following will send the all file to the REPL
+" The following will send the whole file to the REPL
 nnoremap <C-c>gg gg<Plug>(slimy_send_motion)G
 " For Lisp and Scheme, the following will select the S-expr
 " that contain the cursor and send it to the REPL
