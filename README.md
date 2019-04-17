@@ -77,7 +77,15 @@ There are thwo other mapping defined but not bound by default:
 * `<Plug>(slimy_send_line)` send the line under the cursor
 * `<Plug>(slimy_send_motion)` wait for a motion or operator and send the
     corresponding content to the REPL. Use this to implement smarter
-    selection.
+    selection. This is obviously the most powerfull of all mappings. For example
+    you can do things like that:
+```
+" The following will send the all file to the REPL
+nnoremap <C-c>gg gg<Plug>(slimy_send_motion)G
+" For Lisp and Scheme, the following will select the S-expr
+" that contain the cursor and send it to the REPL
+nnoremap <C-c><C-c> <Plug>(slimy_send_motion)a)
+```
 
 ## Options
 
