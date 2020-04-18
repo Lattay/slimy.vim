@@ -15,13 +15,13 @@ command -nargs=+ SlimySend1 call slimy#send(<q-args> . '\r')
 command -nargs=+ SlimySend0 call slimy#send(<args>)
 command! SlimySendCurrentLine call slimy#send(getline('.') . '\r')
 
-noremap <SID>Operator :<c-u>call slimy#store_curpos()<cr>:set opfunc=slimy#send_op<cr>g@
+noremap <SID>Operator <cmd>call slimy#store_curpos()<cr><cmd>set opfunc=slimy#send_op<cr>g@
 
-noremap <unique> <script> <silent> <Plug>(slimy_send_region) :<c-u>call slimy#send_op(visualmode(), 1)<cr>
-noremap <unique> <script> <silent> <Plug>(slimy_send_line) :<c-u>call slimy#send_lines(v:count1)<cr>
+noremap <unique> <script> <silent> <Plug>(slimy_send_region) <cmd>call slimy#send_op(visualmode(), 1)<cr>
+noremap <unique> <script> <silent> <Plug>(slimy_send_line) <cmd>call slimy#send_lines(v:count1)<cr>
 noremap <unique> <script> <silent> <Plug>(slimy_send_motion) <SID>Operator
 noremap <unique> <script> <silent> <Plug>(slimy_send_paragraph) <SID>Operatorip
-noremap <unique> <script> <silent> <Plug>(slimy_config) :<c-u>SlimyConfig<cr>
+noremap <unique> <script> <silent> <Plug>(slimy_config) <cmd>SlimyConfig<cr>
 
 if !exists('g:slimy_no_mappings') || !g:slimy_no_mappings
     if !hasmapto('<Plug>(slimy_region_send)', 'x')
