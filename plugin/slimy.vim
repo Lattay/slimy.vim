@@ -10,30 +10,28 @@ call slimy#config#pre_config()
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 command -bar -nargs=0 SlimyConfig call slimy#config()
-command -range -bar -nargs=0 SlimySend call slimy#send_range(<line1>, <line2>)
-command -nargs=+ SlimySend1 call slimy#send(<q-args> . '\r')
-command -nargs=+ SlimySend0 call slimy#send(<args>)
-command! SlimySendCurrentLine call slimy#send(getline('.') . '\r')
+command -range=% -bar -nargs=0 SlimySend call slimy#send_range(<line1>, <line2>)
+command -count=1 SlimySendLines call slimy#send_lines(<count>)
 
-noremap <SID>Operator <cmd>call slimy#store_curpos()<cr><cmd>set opfunc=slimy#send_op<cr>g@
+noremap <sid>Op <cmd>call slimy#store_curpos()<cr><cmd>set opfunc=slimy#send_op<cr>g@
 
-noremap <unique> <script> <silent> <Plug>(slimy_send_region) <cmd>call slimy#send_op(visualmode(), 1)<cr>
-noremap <unique> <script> <silent> <Plug>(slimy_send_line) <cmd>call slimy#send_lines(v:count1)<cr>
-noremap <unique> <script> <silent> <Plug>(slimy_send_motion) <SID>Operator
-noremap <unique> <script> <silent> <Plug>(slimy_send_paragraph) <SID>Operatorip
-noremap <unique> <script> <silent> <Plug>(slimy_config) <cmd>SlimyConfig<cr>
+noremap <unique> <script> <silent> <plug>(slimy_send_region) <cmd>call slimy#send_op(visualmode(), 1)<cr>
+noremap <unique> <script> <silent> <plug>(slimy_send_line) <cmd>call slimy#send_lines(v:count1)<cr>
+noremap <unique> <script> <silent> <plug>(slimy_send_motion) <sid>Op
+noremap <unique> <script> <silent> <plug>(slimy_send_paragraph) <sid>Opip
+noremap <unique> <script> <silent> <plug>(slimy_config) <cmd>SlimyConfig<cr>
 
 if !exists('g:slimy_no_mappings') || !g:slimy_no_mappings
-    if !hasmapto('<Plug>(slimy_region_send)', 'x')
-        xmap <c-c><c-c> <Plug>(slimy_send_region)
+    if !hasmapto('<plug>(slimy_region_send)', 'x')
+        xmap <c-c><c-c> <plug>(slimy_send_region)
     endif
 
-    if !hasmapto('<Plug>(slimy_paragraph_send)', 'n')
-        nmap <c-c><c-c> <Plug>(slimy_send_paragraph)
+    if !hasmapto('<plug>(slimy_paragraph_send)', 'n')
+        nmap <c-c><c-c> <plug>(slimy_send_paragraph)
     endif
 
-    if !hasmapto('<Plug>(slimy_config)', 'n')
-        nmap <c-c>v <Plug>(slimy_config)
+    if !hasmapto('<plug>(slimy_config)', 'n')
+        nmap <c-c>v <plug>(slimy_config)
     endif
 endif
 

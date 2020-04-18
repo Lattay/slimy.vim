@@ -44,23 +44,13 @@ function! slimy#send_range(startline, endline) abort
         return
     endif
 
-    let l:rv = getreg('"')
-    let l:rt = getregtype('"')
-    silent exe a:startline . ',' . a:endline . 'yank'
-    call slimy#send(@")
-    call setreg('"', l:rv, l:rt)
+    for l:line in getline(a:startline, a:endline)
+        call slimy#send(l:line . "\r")
+    endfor
 endfunction
 
 function! slimy#send_lines(count) abort
-    if !slimy#config#get_config()
-        return
-    endif
-
-    let l:rv = getreg('"')
-    let l:rt = getregtype('"')
-    silent exe 'normal! ' . a:count . 'yy'
-    call slimy#send(@")
-    call setreg('"', rv, rt)
+    return slimy#send_range(line('.'), line('.') - 1 + a:count)
 endfunction
 
 function! slimy#store_curpos() abort
