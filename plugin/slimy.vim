@@ -11,12 +11,10 @@ call slimy#config#pre_config()
 
 command -bar -nargs=0 SlimyConfig call slimy#config()
 command -range=% -bar -nargs=0 SlimySend call slimy#send_range(<line1>, <line2>)
-command -count=1 SlimySendLines call slimy#send_lines(<count>)
 
 noremap <sid>Op <cmd>call slimy#store_curpos()<cr><cmd>set opfunc=slimy#send_op<cr>g@
 
-noremap <unique> <script> <silent> <plug>(slimy_send_region) <cmd>call slimy#send_op(visualmode(), 1)<cr>
-noremap <unique> <script> <silent> <plug>(slimy_send_line) <cmd>call slimy#send_lines(v:count1)<cr>
+noremap <unique> <script> <silent> <plug>(slimy_send_region) <cmd>call slimy#send_reg(visualmode() ==# 'V')<cr>
 noremap <unique> <script> <silent> <plug>(slimy_send_motion) <sid>Op
 noremap <unique> <script> <silent> <plug>(slimy_send_paragraph) <sid>Opip
 noremap <unique> <script> <silent> <plug>(slimy_config) <cmd>SlimyConfig<cr>
@@ -34,4 +32,3 @@ if !exists('g:slimy_no_mappings') || !g:slimy_no_mappings
         nmap <c-c>v <plug>(slimy_config)
     endif
 endif
-
