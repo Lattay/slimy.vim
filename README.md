@@ -92,8 +92,8 @@ Public functions are the following :
 
 There are two mapping by default:
 
-* <C-c><C-c> to send a paragraph or a selection to the REPL
-* <C-c>v to reconfigure slimy
+* `<C-c><C-c>` to send a paragraph or a selection to the REPL
+* `<C-c>v` to reconfigure slimy
 
 If you want to override the mappings (for example to use `!!` and `!c`) put
 the following in your vimrc 
